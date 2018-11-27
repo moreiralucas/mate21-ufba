@@ -9,23 +9,14 @@ import os
 from data import Dataset
 from parameters import Parameters
 
-p = Parameters()
-d = Dataset()
 
-X_train, y_train, classes_train = d.load_multiclass_dataset(p.TRAIN_FOLDER, p.IMAGE_HEIGHT, p.IMAGE_WIDTH, p.NUM_CHANNELS)
+# p = Parameters()
+# d = Dataset()
+# train, classes_train = d.load_multiclass_dataset(p.TRAIN_FOLDER, p.IMAGE_HEIGHT, p.IMAGE_WIDTH, p.NUM_CHANNELS)
+# train = d.shuffle(train[0], train[1], seed=42)
 
-X_test, X_labels = d.load_images(p.TEST_FOLDER, p.IMAGE_HEIGHT, p.IMAGE_WIDTH, p.NUM_CHANNELS)
-
-X_train, y_train = d.shuffle(X_train, y_train, seed=42)
-X_train, y_train, X_val, y_val = d.split(X_train, y_train, p.SPLIT_RATE)
-
-d.set_scales(np.array([0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5]))
-d.set_angles(np.array([-10, 0, 10]))
-
-# print("Before augmentation: X: {}, Y: {}".format(len(X_train), len(y_train)))
-X_train, y_train = d.augmentation(X_train, y_train) # aumentation no treino
-X_val, y_val = d.augmentation(X_val, y_val) # aumentation no validation
-# print("After augmentation: X: {}, Y: {}".format(len(X_train), len(y_train)))
+# train, val = d.split(train[0], train[1], p.SPLIT_RATE)
+# train = d.augmentation(train[0], train[1])
 
 class Net():
     # ---------------------------------------------------------------------------------------------------------- #
@@ -33,9 +24,9 @@ class Net():
     #         Load the training set, shuffle its images and then split them in training and validation subsets.  #
     #         After that, load the testing set.                                                                  #
     # ---------------------------------------------------------------------------------------------------------- #
-    def __init__(self):
-        d.set_scales(False)
-        d.set_angles(False)
+    def __init__(self, input_train, input_val, p, size_class_train=10):
+        self.train = input_train
+        self.val = input_val
 
         # ---------------------------------------------------------------------------------------------------------- #
         # Description:                                                                                               #
@@ -47,7 +38,7 @@ class Net():
         with self.graph.as_default():
             self.X = tf.placeholder(tf.float32, shape = (None, p.IMAGE_HEIGHT, p.IMAGE_WIDTH, p.NUM_CHANNELS))
             self.y = tf.placeholder(tf.int64, shape = (None,))
-            self.y_one_hot = tf.one_hot(self.y, len(classes_train))
+            self.y_one_hot = tf.one_hot(self.y, size_class_train)
             self.learning_rate = tf.placeholder(tf.float32)
             self.is_training = tf.placeholder(tf.bool)
             print(self.X.shape)
@@ -71,7 +62,7 @@ class Net():
 
             self.out = tf.reshape(self.out, [-1, self.out.shape[1]*self.out.shape[2]*self.out.shape[3]])
 
-            self.out = tf.layers.dense(self.out, len(classes_train), activation=tf.nn.sigmoid)
+            self.out = tf.layers.dense(self.out, size_class_train, activation=tf.nn.sigmoid)
 
             self.loss = tf.reduce_mean(tf.losses.softmax_cross_entropy(self.y_one_hot, self.out))
 
@@ -86,6 +77,7 @@ class Net():
     # ---------------------------------------------------------------------------------------------------------- #
 
     def treino(self):
+        p = Parameters()
         with tf.Session(graph = self.graph) as session:
             # weight initialization
             session.run(tf.global_variables_initializer())
@@ -101,7 +93,7 @@ class Net():
                 print('Epoch: '+ str(epoch+1), end=' ')
                 lr = (p.S_LEARNING_RATE_FULL*(p.NUM_EPOCHS_FULL-epoch-1)+p.F_LEARNING_RATE_FULL*epoch)/(p.NUM_EPOCHS_FULL-1)
                 self.training_epoch(session, self.train_op, lr)
-                val_acc, val_loss = self.evaluation(session, X_val, y_val, name='Validation')
+                val_acc, val_loss = self.evaluation(session, self.val[0], self.val[1], name='Validation')
                 # Otimizar o early stopping
                 if val_loss < menor_loss:
                     menor_loss = val_loss
@@ -123,25 +115,26 @@ class Net():
             print ("Acuracia : " + str(acuracia) + ", loss: " + str(menor_loss) + ", epoca: " + str(epoca)) 
 
             #-********************************************************-
-            print ('-********************************************************-')
-            print ('Start test...')
-            outputs = None
-            time_now = datetime.datetime.now()
-            path_txt = str(time_now.day) + '_' + str(time_now.hour) + 'h'  + str(time_now.minute) + 'm.txt'
-            with open(path_txt, 'w') as f:
-                for j in range(len(X_test)):
-                    feed_dict={self.X: np.reshape(X_test[j], (1, ) + X_test[j].shape), self.is_training: False}
-                    saida = session.run(self.out, feed_dict)
-                    outputs = np.array(saida[0])
-                    resp = str(X_labels[j]) +' ' + str(np.argmax(outputs)) + '\n'
-                    f.write(resp)
-                f.close()
+            # print ('-********************************************************-')
+            # print ('Start test...')
+            # outputs = None
+            # time_now = datetime.datetime.now()
+            # path_txt = str(time_now.day) + '_' + str(time_now.hour) + 'h'  + str(time_now.minute) + 'm.txt'
+            # with open(path_txt, 'w') as f:
+            #     for j in range(len(X_test)):
+            #         feed_dict={self.X: np.reshape(X_test[j], (1, ) + X_test[j].shape), self.is_training: False}
+            #         saida = session.run(self.out, feed_dict)
+            #         outputs = np.array(saida[0])
+            #         resp = str(X_labels[j]) +' ' + str(np.argmax(outputs)) + '\n'
+            #         f.write(resp)
+            #     f.close()
 
     # ---------------------------------------------------------------------------------------------------------- #
     # Description:                                                                                               #
     #         Evaluate images in Xv with labels in yv.                                                           #
     # ---------------------------------------------------------------------------------------------------------- #
     def evaluation(self, session, Xv, yv, name='Evaluation'):
+        p = Parameters()
         start = time.time()
         eval_loss = 0
         eval_acc = 0
@@ -158,20 +151,20 @@ class Net():
     #         Run one training epoch using images in X_train and labels in y_train.                              #
     # ---------------------------------------------------------------------------------------------------------- #
     def training_epoch(self, session, op, lr):
-        batch_list = np.random.permutation(len(X_train))
-
+        batch_list = np.random.permutation(len(self.train[0]))
+        p = Parameters()
         start = time.time()
         train_loss = 0
         train_acc = 0
-        for j in range(0, len(X_train), p.BATCH_SIZE):
-            if j+p.BATCH_SIZE > len(X_train):
+        for j in range(0, len(self.train[0]), p.BATCH_SIZE):
+            if j+p.BATCH_SIZE > len(self.train[0]):
                 break
-            X_batch = X_train.take(batch_list[j:j+p.BATCH_SIZE], axis=0)
-            y_batch = y_train.take(batch_list[j:j+p.BATCH_SIZE], axis=0)
+            X_batch = self.train[0].take(batch_list[j:j+p.BATCH_SIZE], axis=0)
+            y_batch = self.train[1].take(batch_list[j:j+p.BATCH_SIZE], axis=0)
 
             ret = session.run([op, self.loss, self.correct], feed_dict = {self.X: X_batch, self.y: y_batch, self.learning_rate: lr, self.is_training: True})
             train_loss += ret[1]*p.BATCH_SIZE
             train_acc += ret[2]
 
-        pass_size = (len(X_train)-len(X_train)%p.BATCH_SIZE)
+        pass_size = (len(self.train[0])-len(self.train[0])%p.BATCH_SIZE)
         print('LR:'+str(lr)+' Time:'+str(time.time()-start)+' ACC:'+str(train_acc/pass_size)+' Loss:'+str(train_loss/pass_size))

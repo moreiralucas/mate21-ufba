@@ -47,7 +47,7 @@ class Dataset:
                 y[k] = i
                 k += 1
         X = X / 255.0
-        return X, y, classes
+        return [X, y], classes
 
     def load_images(self, path, height=224, width=224, num_channels=3):
         images = sorted(os.listdir(path))
@@ -63,7 +63,7 @@ class Dataset:
                 y[k] = str(images[j])
                 k += 1
         X = X / 255.0
-        return X, y
+        return [X, y]
 
     # ---------------------------------------------------------------------------------------------------------- #
     # Description:                                                                                               #
@@ -81,8 +81,9 @@ class Dataset:
         if seed is not None:
             np.random.seed(seed)
         p = np.random.permutation(len(X))
+        # X, Y = X[p], y[p]
+        # return [X, Y]
         return X[p], y[p]
-
     # ---------------------------------------------------------------------------------------------------------- #
     # Description:                                                                                               #
     #       shuffle  Split two multidimensional arrays in two parts in the first dimension. The 1st dimension size must #
@@ -100,7 +101,7 @@ class Dataset:
     def split(self, X, y, rate):
         assert len(X) == len(y), "The 1st dimension size must be the same for both arrays!"
         idx = int(len(X)*float(rate))
-        return X[:idx], y[:idx], X[idx:], y[idx:]
+        return [X[:idx], y[:idx]], [X[idx:], y[idx:]]
 
     def set_scales(self, scales):
         self.scalares = scales
@@ -113,27 +114,28 @@ class Dataset:
         M = cv2.getRotationMatrix2D((p.IMAGE_WIDTH/2, p.IMAGE_HEIGHT/2), angle, scale)
         return cv2.warpAffine(img, M, (p.IMAGE_WIDTH, p.IMAGE_HEIGHT)).reshape(p.IMAGE_HEIGHT, p.IMAGE_WIDTH, p.NUM_CHANNELS)
 
-    def augmentation(self, imgs, labels):
+    def augmentation(self, data):
         scales = self.scalares
         angles = self.angulos
         p = Parameters()
-        num_images = (len(imgs) * len(scales) * len(angles)) # + len(imgs)
+        num_images = (len(data[0]) * len(scales) * len(angles)) # + len(imgs)
 
         X_train = np.empty([num_images, p.IMAGE_HEIGHT, p.IMAGE_WIDTH, p.NUM_CHANNELS], dtype=np.float32)
         y_train = np.empty([num_images], dtype=np.int64)
 
         k = 0
-        for i in range(len(imgs)):
+        for i in range(len(data[0])):
             for scale in scales:
                 for angle in angles:
-                    X_train[k] = self.transform(imgs[i], angle, scale) # Adiciona imagens modificadas
-                    y_train[k] = labels[i] # Adicona labels das imagens modificadas
+                    X_train[k] = self.transform(data[0][i], angle, scale) # Adiciona imagens modificadas
+                    y_train[k] = data[1][i] # Adicona labels das imagens modificadas
                     k += 1
         # Trecho da gambiarra
         tam = int(num_images * 0.8)
-        if num_images == len(imgs): # Entra aqui quando os parâmetros do augmentation não foram definidos
+        if num_images == len(data[0]): # Entra aqui quando os parâmetros do augmentation não foram definidos
             print("Os parâmetros do augmentation não foram definidos!")
-            return X_train, y_train
-
-        out_x, out_y = self.shuffle(X_train, y_train, seed=42)
-        return out_x[:tam], out_y[:tam]
+            return [X_train, y_train]
+        print("len(X_train): {}".format(len(X_train)))
+        print("len(y_train): {}".format(len(y_train)))
+        x_out, y_out = self.shuffle(X_train, y_train, seed=42)
+        return [x_out[:tam], y_out[:tam]]
