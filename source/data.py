@@ -5,6 +5,7 @@ import numpy as np
 import cv2
 import os
 from parameters import Parameters
+from 
 
 class Dataset:
     def __init__(self):
@@ -118,7 +119,7 @@ class Dataset:
         scales = self.scalares
         angles = self.angulos
         p = Parameters()
-        
+
         size_angles = len(angles)
         size_scales = len(scales)
         total_augmentation = int(size_scales * size_angles * 0.8)
@@ -130,16 +131,16 @@ class Dataset:
         np.random.seed(seed)
         for i in range(len(data[0])):
             for j in range(total_augmentation):
-                scale = scales[np.randint(size_scales)]
-                angle = angles[np.randint(size_angles)]
+                scale = scales[np.random.randint(size_scales)]
+                angle = angles[np.random.randint(size_angles)]
                 X_train[k] = self.transform(data[0][i], angle, scale) # Adiciona imagens modificadas
                 y_train[k] = data[1][i] # Adicona labels das imagens modificadas
                 k += 1 # Trocar esse k por j+ i
         # Trecho da gambiarra
-        tam = int(num_images * 0.8)
-        if num_images == len(data[0]): # Entra aqui quando os parâmetros do augmentation não foram definidos
-            print("Os parâmetros do augmentation não foram definidos!")
-            return [X_train, y_train]
+        # tam = int(num_images * 0.8)
+        # if num_images == len(data[0]): # Entra aqui quando os parâmetros do augmentation não foram definidos
+        #     print("Os parâmetros do augmentation não foram definidos!")
+        #     return [X_train, y_train]
         
         print("len(X_train): {}".format(len(X_train)))
         print("len(y_train): {}".format(len(y_train)))

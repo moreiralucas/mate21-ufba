@@ -95,20 +95,20 @@ class Net():
                 self.training_epoch(session, self.train_op, lr)
                 val_acc, val_loss = self.evaluation(session, self.val[0], self.val[1], name='Validation')
                 # Otimizar o early stopping
-                if val_loss < menor_loss:
+                if val_acc > acuracia:
                     menor_loss = val_loss
                     acuracia = val_acc
                     epoca = epoch
                     contador = 0
                     saver.save(session, os.path.join(p.LOG_DIR, 'model.ckpt'))
                     print ('The model has successful saved')
-                else:
-                    contador += 1
-                    if contador > p.TOLERANCE:
-                        print('The train has stopped')
-                        break
-                        print('O treino deveria ter parado se estivesse usando o early stopping')
-                    print ('The model hasn\'t saved')
+                # else:
+                #     contador += 1
+                #     if contador > p.TOLERANCE:
+                #         print('The train has stopped')
+                #         break
+                #         print('O treino deveria ter parado se estivesse usando o early stopping')
+                #     print ('The model hasn\'t saved')
                 # break #TODO
                 print ('\n-********************************************************-')
 
