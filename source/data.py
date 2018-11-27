@@ -5,7 +5,6 @@ import numpy as np
 import cv2
 import os
 from parameters import Parameters
-from 
 
 class Dataset:
     def __init__(self):

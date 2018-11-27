@@ -83,9 +83,8 @@ class Net():
             session.run(tf.global_variables_initializer())
 
             menor_loss = 1e9
-            acuracia = 0
+            best_acc = 0
             epoca = 0
-            contador = 0
             saver = tf.train.Saver()
 
             # full optimization
@@ -95,11 +94,10 @@ class Net():
                 self.training_epoch(session, self.train_op, lr)
                 val_acc, val_loss = self.evaluation(session, self.val[0], self.val[1], name='Validation')
                 # Otimizar o early stopping
-                if val_acc > acuracia:
+                if val_acc > best_acc:
                     menor_loss = val_loss
-                    acuracia = val_acc
+                    best_acc = val_acc
                     epoca = epoch
-                    contador = 0
                     saver.save(session, os.path.join(p.LOG_DIR, 'model.ckpt'))
                     print ('The model has successful saved')
                 # else:
@@ -112,7 +110,7 @@ class Net():
                 # break #TODO
                 print ('\n-********************************************************-')
 
-            print ("Acuracia : " + str(acuracia) + ", loss: " + str(menor_loss) + ", epoca: " + str(epoca)) 
+            print ("Best_acc : " + str(best_acc) + ", loss: " + str(menor_loss) + ", epoca: " + str(epoca)) 
     
     def prediction(self, classes_train):
         pass
