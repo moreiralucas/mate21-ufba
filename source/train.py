@@ -43,6 +43,8 @@ def main():
     
     n = Net(train, val, p, size_class_train=10)
     n.treino()
+    n.prediction(classes_train)
+
 
 if __name__ == "__main__":
     main()

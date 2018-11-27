@@ -114,27 +114,32 @@ class Dataset:
         M = cv2.getRotationMatrix2D((p.IMAGE_WIDTH/2, p.IMAGE_HEIGHT/2), angle, scale)
         return cv2.warpAffine(img, M, (p.IMAGE_WIDTH, p.IMAGE_HEIGHT)).reshape(p.IMAGE_HEIGHT, p.IMAGE_WIDTH, p.NUM_CHANNELS)
 
-    def augmentation(self, data):
+    def augmentation(self, data, seed=42):
         scales = self.scalares
         angles = self.angulos
         p = Parameters()
-        num_images = (len(data[0]) * len(scales) * len(angles)) # + len(imgs)
+        size_angles = len(angles)
+        size_scales = len(scales)
+        num_images = len(data[0]) * size_scales * size_angles # + len(imgs)
 
         X_train = np.empty([num_images, p.IMAGE_HEIGHT, p.IMAGE_WIDTH, p.NUM_CHANNELS], dtype=np.float32)
         y_train = np.empty([num_images], dtype=np.int64)
-
+        total_augmentation = int(len(self.angulos) * len(self.scalares) * 0.8)
         k = 0
+        np.random.seed(seed)
         for i in range(len(data[0])):
-            for scale in scales:
-                for angle in angles:
-                    X_train[k] = self.transform(data[0][i], angle, scale) # Adiciona imagens modificadas
-                    y_train[k] = data[1][i] # Adicona labels das imagens modificadas
-                    k += 1
+            for j in range(total_augmentation):
+                scale = scales[np.randint(size_scales)]
+                angle = angles[np.randint(size_angles)]
+                X_train[k] = self.transform(data[0][i], angle, scale) # Adiciona imagens modificadas
+                y_train[k] = data[1][i] # Adicona labels das imagens modificadas
+                k += 1
         # Trecho da gambiarra
         tam = int(num_images * 0.8)
         if num_images == len(data[0]): # Entra aqui quando os parâmetros do augmentation não foram definidos
             print("Os parâmetros do augmentation não foram definidos!")
             return [X_train, y_train]
+        
         print("len(X_train): {}".format(len(X_train)))
         print("len(y_train): {}".format(len(y_train)))
         x_out, y_out = self.shuffle(X_train, y_train, seed=42)

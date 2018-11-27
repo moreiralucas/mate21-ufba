@@ -113,7 +113,9 @@ class Net():
                 print ('\n-********************************************************-')
 
             print ("Acuracia : " + str(acuracia) + ", loss: " + str(menor_loss) + ", epoca: " + str(epoca)) 
-
+    
+    def prediction(self, classes_train):
+        pass
             #-********************************************************-
             # print ('-********************************************************-')
             # print ('Start test...')
