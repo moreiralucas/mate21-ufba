@@ -128,7 +128,13 @@ class Net():
                     resp = str(test[1][j]) +' ' + str(np.argmax(outputs)) + '\n'
                     f.write(resp)
                 f.close()
-
+    
+    def prediction2(self, test, classes_train):
+        p = Parameters()
+        tf.reset_default_graph()
+        saver = tf.train.Saver()
+        with tf.Session() as session:
+            saver.restore(session, os.path.join(p.LOG_DIR, 'model.ckpt'))  
     # ---------------------------------------------------------------------------------------------------------- #
     # Description:                                                                                               #
     #         Evaluate images in Xv with labels in yv.                                                           #
