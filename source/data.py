@@ -46,7 +46,6 @@ class Dataset:
                 X[k] = img
                 y[k] = i
                 k += 1
-        X = X / 255.0
         return [X, y], classes
 
     def load_images(self, path, height=224, width=224, num_channels=3):
@@ -62,7 +61,6 @@ class Dataset:
                 X[k] = img
                 y[k] = str(images[j])
                 k += 1
-        X = X / 255.0
         return [X, y]
 
     # ---------------------------------------------------------------------------------------------------------- #
@@ -132,8 +130,10 @@ class Dataset:
             for j in range(total_augmentation):
                 scale = scales[np.random.randint(size_scales)]
                 angle = angles[np.random.randint(size_angles)]
-                X_train[k] = self.transform(data[0][i], angle, scale) # Adiciona imagens modificadas
-                y_train[k] = data[1][i] # Adicona labels das imagens modificadas
+                # Adiciona imagens modificadas
+                X_train[k] = self.transform(data[0][i], angle, scale) / 255.0
+                # Adicona labels das imagens modificadas
+                y_train[k] = data[1][i]
                 k += 1 # Trocar esse k por j+ i
         # Trecho da gambiarra
         # tam = int(num_images * 0.8)

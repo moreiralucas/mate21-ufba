@@ -112,22 +112,22 @@ class Net():
 
             print ("Best_acc : " + str(best_acc) + ", loss: " + str(menor_loss) + ", epoca: " + str(epoca)) 
     
-    def prediction(self, classes_train):
-        pass
-            #-********************************************************-
-            # print ('-********************************************************-')
-            # print ('Start test...')
-            # outputs = None
-            # time_now = datetime.datetime.now()
-            # path_txt = str(time_now.day) + '_' + str(time_now.hour) + 'h'  + str(time_now.minute) + 'm.txt'
-            # with open(path_txt, 'w') as f:
-            #     for j in range(len(X_test)):
-            #         feed_dict={self.X: np.reshape(X_test[j], (1, ) + X_test[j].shape), self.is_training: False}
-            #         saida = session.run(self.out, feed_dict)
-            #         outputs = np.array(saida[0])
-            #         resp = str(X_labels[j]) +' ' + str(np.argmax(outputs)) + '\n'
-            #         f.write(resp)
-            #     f.close()
+    def prediction(self, test, classes_train):
+        print ('-********************************************************-')
+        print ('Start prediction ...')
+        #p = Parameters()
+        with tf.Session(graph = self.graph) as session:
+            outputs = None
+            time_now = datetime.datetime.now()
+            path_txt = str(time_now.day) + '_' + str(time_now.hour) + 'h'  + str(time_now.minute) + 'm.txt'
+            with open(path_txt, 'w') as f:
+                for j in range(len(test[0])):
+                    feed_dict={self.X: np.reshape(test[0][j], (1, ) + test[0][j].shape), self.is_training: False}
+                    saida = session.run(self.out, feed_dict)
+                    outputs = np.array(saida[0])
+                    resp = str(test[1][j]) +' ' + str(np.argmax(outputs)) + '\n'
+                    f.write(resp)
+                f.close()
 
     # ---------------------------------------------------------------------------------------------------------- #
     # Description:                                                                                               #
