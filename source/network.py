@@ -10,6 +10,7 @@ from data import Dataset
 from parameters import Parameters
 
 
+import cv2
 # p = Parameters()
 # d = Dataset()
 # train, classes_train = d.load_multiclass_dataset(p.TRAIN_FOLDER, p.IMAGE_HEIGHT, p.IMAGE_WIDTH, p.NUM_CHANNELS)
@@ -24,10 +25,7 @@ class Net():
     #         Load the training set, shuffle its images and then split them in training and validation subsets.  #
     #         After that, load the testing set.                                                                  #
     # ---------------------------------------------------------------------------------------------------------- #
-    def __init__(self, input_train, input_val, p, size_class_train=10):
-        self.train = input_train
-        self.val = input_val
-
+    def __init__(self, p, size_class_train=10):
         # ---------------------------------------------------------------------------------------------------------- #
         # Description:                                                                                               #
         #         Create a training graph that receives a batch of images and their respective labels and run a      #
@@ -62,7 +60,7 @@ class Net():
 
             self.out = tf.reshape(self.out, [-1, self.out.shape[1]*self.out.shape[2]*self.out.shape[3]])
 
-            self.out = tf.layers.dense(self.out, size_class_train, activation=tf.nn.sigmoid)
+            self.out = tf.layers.dense(self.out, size_class_train, activation=None)
 
             self.loss = tf.reduce_mean(tf.losses.softmax_cross_entropy(self.y_one_hot, self.out))
 
@@ -75,8 +73,9 @@ class Net():
     # Description:                                                                                               #
     #         Training loop.                                                                                     #
     # ---------------------------------------------------------------------------------------------------------- #
-
-    def treino(self):
+    def treino(self, input_train, input_val):
+        self.train = input_train
+        self.val = input_val
         p = Parameters()
         with tf.Session(graph = self.graph) as session:
             # weight initialization
@@ -98,7 +97,7 @@ class Net():
                     menor_loss = val_loss
                     best_acc = val_acc
                     epoca = epoch
-                    saver.save(session, os.path.join(p.LOG_DIR, 'model.ckpt'))
+                    saver.save(session, os.path.join(p.LOG_DIR, 'model/cnn'))
                     print ('The model has successful saved')
                 # else:
                 #     contador += 1
@@ -112,14 +111,36 @@ class Net():
 
             print ("Best_acc : " + str(best_acc) + ", loss: " + str(menor_loss) + ", epoca: " + str(epoca)) 
     
-    def prediction(self, test, classes_train):
-        print ('-********************************************************-')
-        print ('Start prediction ...')
-        #p = Parameters()
+    # def prediction(self, test, classes_train):
+    #     print ('-********************************************************-')
+    #     print ('Start prediction ...')
+    #     #p = Parameters()
+    #     with tf.Session(graph = self.graph) as session:
+    #         outputs = None
+    #         time_now = datetime.datetime.now()
+    #         path_txt = str(time_now.day) + '_' + str(time_now.hour) + 'h'  + str(time_now.minute) + 'm.txt'
+    #         with open(path_txt, 'w') as f:
+    #             for j in range(len(test[0])):
+    #                 feed_dict={self.X: np.reshape(test[0][j], (1, ) + test[0][j].shape), self.is_training: False}
+    #                 saida = session.run(self.out, feed_dict)
+    #                 outputs = np.array(saida[0])
+    #                 resp = str(test[1][j]) +' ' + str(np.argmax(outputs)) + '\n'
+    #                 f.write(resp)
+    #             f.close()
+    
+    def prediction2(self, test):
+        print("prediction2(self, test)")
+        p = Parameters()
+
         with tf.Session(graph = self.graph) as session:
+            saver = tf.train.Saver(max_to_keep=0)
+            # print (os.path.join(p.LOG_DIR, 'cnn'))
+            saver.restore(session, os.path.join(p.LOG_DIR, 'cnn'))
             outputs = None
             time_now = datetime.datetime.now()
-            path_txt = str(time_now.day) + '_' + str(time_now.hour) + 'h'  + str(time_now.minute) + 'm.txt'
+            path_txt = str(time_now.day) + 'd' + str(time_now.hour) + 'h'  + str(time_now.minute) + 'm.txt'
+            # print("path_txt: {}".format(path_txt))
+            # cont = 0
             with open(path_txt, 'w') as f:
                 for j in range(len(test[0])):
                     feed_dict={self.X: np.reshape(test[0][j], (1, ) + test[0][j].shape), self.is_training: False}
@@ -127,14 +148,13 @@ class Net():
                     outputs = np.array(saida[0])
                     resp = str(test[1][j]) +' ' + str(np.argmax(outputs)) + '\n'
                     f.write(resp)
+                    # if cont % 100 == 0:
+                    #     cv2.imshow(resp, test[0][j])
+                    #     cv2.waitKey(0)
+                    #     cv2.destroyAllWindows()
+                    # cont += 1
                 f.close()
-    
-    def prediction2(self, test, classes_train):
-        p = Parameters()
-        tf.reset_default_graph()
-        saver = tf.train.Saver()
-        with tf.Session() as session:
-            saver.restore(session, os.path.join(p.LOG_DIR, 'model.ckpt'))  
+                # cv2.destroyAllWindows()
     # ---------------------------------------------------------------------------------------------------------- #
     # Description:                                                                                               #
     #         Evaluate images in Xv with labels in yv.                                                           #

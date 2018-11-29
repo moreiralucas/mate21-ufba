@@ -34,17 +34,16 @@ def main():
     val = d.augmentation(val)
 
     # Inicializa a rede
-    n = Net(train, val, p, size_class_train=10)
+    n = Net(p, size_class_train=len(classes_train))
     # Inicia treino
-    n.treino()
+    # n.treino(train, val)
 
     # Carrega imagens de teste para o prediction
-    #test = d.load_images(p.TEST_FOLDER, p.IMAGE_HEIGHT, p.IMAGE_WIDTH, p.NUM_CHANNELS)
-    #print ("Iniciou o prediction.")
+    test = d.load_images(p.TEST_FOLDER, p.IMAGE_HEIGHT, p.IMAGE_WIDTH, p.NUM_CHANNELS)
+    print ("Iniciou o prediction.")
     # Realiza a predição das imagens de teste
-    #n.prediction(test, classes_train)
-    #print ("Finish him!")
-
+    n.prediction2(test)
+    print ("Finish him!")
 
 if __name__ == "__main__":
     main()

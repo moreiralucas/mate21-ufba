@@ -18,7 +18,7 @@ class Parameters:
         self.TEST_FOLDER = '../data_part1/test'   # folder with testing images
         self.SPLIT_RATE = 0.80        # split rate for training and validation sets
         # Training loop
-        self.LOG_DIR = 'modelos/'
+        self.LOG_DIR = 'model/'
         self.NUM_EPOCHS_FULL = 1001
         self.S_LEARNING_RATE_FULL = 0.001
         self.F_LEARNING_RATE_FULL = 0.001
