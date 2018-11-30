@@ -82,16 +82,9 @@ with tf.Session(graph = graph) as session:
     # model saver
     saver = tf.train.Saver(max_to_keep=0)
     saver.restore(session, './model/cnn')
-    # cont = 0
     fp = open(sys.argv[2],'w')
     for i in range(len(X_name)):
         ret = session.run([result], feed_dict = {X: X_img[i:i+1], is_training: False})
         fp.write(X_name[i]+' '+str(ret[0][0])+'\n')
-        # if cont % 100 == 0:
-        #     lab = X_name[i]+' '+str(ret[0][0])+'\n'
-        #     cv2.imshow(lab, X_img[i])
-        #     cv2.waitKey(0)
-        #     cv2.destroyAllWindows()
-        # cont += 1
     fp.close()
 

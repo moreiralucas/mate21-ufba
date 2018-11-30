@@ -135,24 +135,32 @@ class Net():
         with tf.Session(graph = self.graph) as session:
             saver = tf.train.Saver(max_to_keep=0)
             # print (os.path.join(p.LOG_DIR, 'cnn'))
-            saver.restore(session, os.path.join(p.LOG_DIR, 'cnn'))
-            outputs = None
+            saver.restore(session, './model/cnn')
             time_now = datetime.datetime.now()
             path_txt = str(time_now.day) + 'd' + str(time_now.hour) + 'h'  + str(time_now.minute) + 'm.txt'
             # print("path_txt: {}".format(path_txt))
             # cont = 0
+            predicao = []
             with open(path_txt, 'w') as f:
                 for j in range(len(test[0])):
                     feed_dict={self.X: np.reshape(test[0][j], (1, ) + test[0][j].shape), self.is_training: False}
-                    saida = session.run(self.out, feed_dict)
-                    outputs = np.array(saida[0])
-                    resp = str(test[1][j]) +' ' + str(np.argmax(outputs)) + '\n'
-                    f.write(resp)
+                    saida = session.run([self.result], feed_dict)
+                    # print(saida[0][0])
+                    # outputs = np.array(saida[0])
+                    resp = str(test[1][j]) +' ' + str(saida[0][0]) + '\n'
+                    predicao.append(resp)
+                    # f.write(resp)
+                    # print("resp: " + resp )
+                    # if cont == 1:
+                    #     break
                     # if cont % 100 == 0:
                     #     cv2.imshow(resp, test[0][j])
                     #     cv2.waitKey(0)
                     #     cv2.destroyAllWindows()
                     # cont += 1
+                predicao.sort()
+                for j in range(len(predicao)):
+                    f.write(predicao[j])
                 f.close()
                 # cv2.destroyAllWindows()
     # ---------------------------------------------------------------------------------------------------------- #
