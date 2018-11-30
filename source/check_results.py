@@ -24,17 +24,16 @@ t2.sort()
 print(len(t1) == len(t2))
 cont = 0
 images = sorted(os.listdir(path))
-# print("images: ")
-# print(images)
+
 for i in range(len(t1)):
     if t1[i] != t2[i]:
         print("{} <--> {}".format(t1[i], t2[i]))
         cont += 1
         lucas = t1[i]
-        maups = t2[i]
+        docker = t2[i]
 
         lab1 = "lucas: " + lucas[len(t1[i]) - 1]
-        lab2 = "maups: " +maups[len(t2[i]) - 1]
+        lab2 = "docker: " + docker[len(t2[i]) - 1]
         
         img = cv2.imread(path+'/'+images[i], cv2.IMREAD_GRAYSCALE)
 

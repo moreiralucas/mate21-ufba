@@ -120,7 +120,7 @@ class Dataset:
         size_angles = len(angles)
         size_scales = len(scales)
         total_augmentation = int(size_scales * size_angles * 0.8)
-        num_images = len(data[0]) * total_augmentation # + len(imgs)
+        num_images = len(data[0]) * total_augmentation
 
         X_train = np.empty([num_images, p.IMAGE_HEIGHT, p.IMAGE_WIDTH, p.NUM_CHANNELS], dtype=np.float32)
         y_train = np.empty([num_images], dtype=np.int64)
@@ -134,13 +134,7 @@ class Dataset:
                 X_train[k] = self.transform(data[0][i], angle, scale) / 255.0
                 # Adicona labels das imagens modificadas
                 y_train[k] = data[1][i]
-                k += 1 # Trocar esse k por j+ i
-        # Trecho da gambiarra
-        # tam = int(num_images * 0.8)
-        # if num_images == len(data[0]): # Entra aqui quando os parâmetros do augmentation não foram definidos
-        #     print("Os parâmetros do augmentation não foram definidos!")
-        #     return [X_train, y_train]
-        
+                k += 1
         print("len(X_train): {}".format(len(X_train)))
         print("len(y_train): {}".format(len(y_train)))
         x_out, y_out = self.shuffle(X_train, y_train, seed=42)
