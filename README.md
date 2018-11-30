@@ -1,23 +1,38 @@
 # mate21
 Tópicos em Computação Visual III
 
-https://pip.pypa.io/en/stable/reference/pip_freeze/
+Arquivos utilizados durante a disciplina MATE21 do departamento de computação da UFBA.
 
+Na pasta ```other-files``` contém códigos utilizados na primeira parte da disciplina (sem o tensorflow).
+
+
+Na pasta ```source``` contém códigos utilizados na segunda parte da disciplina (com o tensorflow).
+
+
+### Instruções para utilizar os códigos
+
+Instale o virtual env:
 
 ```
 sudo apt install python3-venv
 ```
 
-Then, create and activate a venv:
+Crie e ative com:
+
 ```
 python3 -m venv env
 source env/bin/activate
 ```
+Instale os requerimentos para usar a CPU:
 
-To install the requirements either run, for CPU usage:
 ```
 pip install -r cpu-requirements.txt
 ```
-or run, for GPU usage, which requires the [Tensorflow GPU dependencies](https://www.tensorflow.org/install/gpu):
+ou, para GPU:
+
 ```
 pip install -r gpu-requirements.txt
+```
+
+
+Mais informações sobre [Tensorflow GPU dependencies](https://www.tensorflow.org/install/gpu)
