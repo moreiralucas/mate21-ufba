@@ -71,6 +71,9 @@ class Net():
             self.result = tf.argmax(self.out, 1)
             self.correct = tf.reduce_sum(tf.cast(tf.equal(self.result, self.y), tf.float32))
 
+            self.accuracy_ph = tf.placeholder(dtype = tf.float32, name  = 'acc')
+            self.accuracy_summary = tf.summary.scalar('accuracy', self.accuracy_ph)
+
     # ---------------------------------------------------------------------------------------------------------- #
     # Description:                                                                                               #
     #         Training loop.                                                                                     #
@@ -81,7 +84,7 @@ class Net():
         with tf.Session(graph = self.graph) as session:
             # weight initialization
             session.run(tf.global_variables_initializer())
-
+            self.writer = tf.summary.FileWriter('../logs', self.graph)    
             menor_loss = 1e9
             best_acc = 0
             epoca = 0
@@ -91,7 +94,7 @@ class Net():
             for epoch in range(p.NUM_EPOCHS_FULL):
                 print('Epoch: '+ str(epoch+1), end=' ')
                 lr = (p.S_LEARNING_RATE_FULL*(p.NUM_EPOCHS_FULL-epoch-1)+p.F_LEARNING_RATE_FULL*epoch)/(p.NUM_EPOCHS_FULL-1)
-                self.training_epoch(session, self.train_op, lr)
+                self.training_epoch(session, self.train_op, lr, epoch+1)
                 val_acc, val_loss = self.evaluation(session, self.val[0], self.val[1], name='Validation')
                 # Otimizar o early stopping
                 if val_acc > best_acc:
@@ -156,7 +159,7 @@ class Net():
     # Description:                                                                                               #
     #         Run one training epoch using images in X_train and labels in y_train.                              #
     # ---------------------------------------------------------------------------------------------------------- #
-    def training_epoch(self, session, op, lr):
+    def training_epoch(self, session, op, lr, ep):
         batch_list = np.random.permutation(len(self.train[0]))
         p = Parameters()
         start = time.time()
@@ -171,6 +174,8 @@ class Net():
             ret = session.run([op, self.loss, self.correct], feed_dict = {self.X: X_batch, self.y: y_batch, self.learning_rate: lr, self.is_training: True})
             train_loss += ret[1]*p.BATCH_SIZE
             train_acc += ret[2]
-
         pass_size = (len(self.train[0])-len(self.train[0])%p.BATCH_SIZE)
-        print('LR:'+str(lr)+' Time:'+str(time.time()-start)+' ACC:'+str(train_acc/pass_size)+' Loss:'+str(train_loss/pass_size))
+        summary = session.run(self.accuracy_summary, feed_dict = {self.accuracy_ph: train_acc/pass_size})
+        self.writer.add_summary(summary, ep)
+        self.writer.flush()
+        print('LR:'+str(lr)+' Time:'+str(time.time()-start)+' ACC:'+str(train_acc/pass_size)+' Loss:'+str(train_loss))
