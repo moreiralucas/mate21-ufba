@@ -6,7 +6,7 @@ import time
 import sys
 import os
 
-from data import Dataset
+from data_PIL import Dataset
 from parameters import Parameters
 
 

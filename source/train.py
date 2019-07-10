@@ -1,6 +1,3 @@
-# ---------------------------------------------------------------------------------------------------------- #
-# Author: maups                                                                                              #
-# ---------------------------------------------------------------------------------------------------------- #
 import tensorflow as tf
 import numpy as np
 import random
@@ -9,7 +6,8 @@ import time
 import sys
 import os
 
-from data import Dataset
+from data_PIL import Dataset
+#from data import Dataset
 from parameters import Parameters
 from network import Net
 
@@ -22,21 +20,24 @@ def main():
 
     # Carrega as imagens do treino com suas respectivas labels
     train, classes_train = d.load_multiclass_dataset(p.TRAIN_FOLDER, p.IMAGE_HEIGHT, p.IMAGE_WIDTH, p.NUM_CHANNELS)
+    print('Carrega as imagens do treino com suas respectivas labels')
     
     # Embaralhas as imagens com seus respectivos labels
     train = d.shuffle(train[0], train[1], seed=42)
-    
+    print('Embaralhas as imagens com seus respectivos labels')
+
     # Divide a base de treino em duas, de acordo com o SPLIT_RATE
     train, val = d.split(train[0], train[1], p.SPLIT_RATE)
+    print('Divide a base de treino em duas, de acordo com o SPLIT_RATE')
 
     # A função augmentation realiza a normalização da imagem (Divide por 255)
-    train = d.augmentation(train)
-    val = d.augmentation(val)
+    #train = d.augmentation(train)
+    #val = d.augmentation(val)
 
     # Inicializa a rede
-    n = Net(train, val, p, size_class_train=10)
+    #n = Net(train, val, p, size_class_train=10)
     # Inicia treino
-    n.treino()
+    #n.treino()
 
     # Carrega imagens de teste para o prediction
     #test = d.load_images(p.TEST_FOLDER, p.IMAGE_HEIGHT, p.IMAGE_WIDTH, p.NUM_CHANNELS)
