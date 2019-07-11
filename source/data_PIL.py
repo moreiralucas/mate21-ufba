@@ -40,20 +40,22 @@ class Dataset:
 
         k = 0
         for i in range(len(classes)):
+            print('Loading class', classes[i] )
             for j in range(len(images[i])):
                 img = Image.open(os.path.join(path, classes[i], images[i][j]))
                 img = np.asarray(img).reshape(height, width, num_channels)
 
                 assert img.shape == (height, width, num_channels), "%r has an invalid image size!" % images[i][j]
                 assert img.dtype == np.uint8, "%r has an invalid pixel format!" % images[i][j]
-                X[k] = img
+                X[k] = img / 255.
                 y[k] = i
                 k += 1
 
         return [X, y], classes
 
     def load_images(self, path, height=224, width=224, num_channels=3):
-        images = sorted(os.listdir(path))
+        images = sorted(img for img in os.listdir(path) if img.endswith('.png'))
+        # images = sorted(os.listdir(path))
         num_images = len(images)
         X = np.empty([num_images, height, width, num_channels], dtype=np.uint8)
         y = np.empty([num_images], dtype=np.object)
@@ -64,7 +66,7 @@ class Dataset:
                 img = np.asarray(img).reshape(height, width, num_channels)
                 assert img.shape == (height, width, num_channels), "%r has an invalid image size!" % images[j]
                 assert img.dtype == np.uint8, "%r has an invalid pixel format!" % images[j]
-                X[k] = img
+                X[k] = img / 255.
                 y[k] = str(images[j])
                 k += 1
         return [X, y]
@@ -115,9 +117,6 @@ class Dataset:
 
     def transform(self, img, angle=0, scale=1):
         p = Parameters()
-        # from PIL import Image
-        # im = Image.open("bride.jpg")
-        # im.rotate(45).show()
         M = cv2.getRotationMatrix2D((p.IMAGE_WIDTH/2, p.IMAGE_HEIGHT/2), angle, scale)
         return cv2.warpAffine(img, M, (p.IMAGE_WIDTH, p.IMAGE_HEIGHT)).reshape(p.IMAGE_HEIGHT, p.IMAGE_WIDTH, p.NUM_CHANNELS)
 

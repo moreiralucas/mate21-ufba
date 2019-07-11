@@ -24,10 +24,7 @@ class Net():
     #         Load the training set, shuffle its images and then split them in training and validation subsets.  #
     #         After that, load the testing set.                                                                  #
     # ---------------------------------------------------------------------------------------------------------- #
-    def __init__(self, input_train, input_val, p, size_class_train=10):
-        self.train = input_train
-        self.val = input_val
-
+    def __init__(self, p, size_class_train=10):
         # ---------------------------------------------------------------------------------------------------------- #
         # Description:                                                                                               #
         #         Create a training graph that receives a batch of images and their respective labels and run a      #
@@ -44,13 +41,13 @@ class Net():
             print(self.X.shape)
 
             self.X = tf.layers.dropout(self.X, 0.2, training=self.is_training) # Dropout
-            self.out = tf.layers.conv2d(self.X, 32, (3, 3), (1, 1), padding='valid', activation=tf.nn.relu)
+            self.out = tf.layers.conv2d(self.X, 32, (2, 2), (1, 1), padding='same', activation=tf.nn.relu)
             print(self.out.shape)
-            self.out = tf.layers.max_pooling2d(self.out, (2, 2), (2, 2), padding='valid')
+            self.out = tf.layers.max_pooling2d(self.out, (2, 2), (1, 1), padding='same')
             print(self.out.shape)
             
-            self.out = tf.layers.conv2d(self.out, 64, (3, 3), (2, 2), padding='valid', activation=tf.nn.relu)
-            self.out = tf.layers.max_pooling2d(self.out, (2, 2), (2, 2), padding='valid')
+            self.out = tf.layers.conv2d(self.out, 64, (2, 2), (1, 1), padding='valid', activation=tf.nn.relu)
+            self.out = tf.layers.max_pooling2d(self.out, (2, 2), (1, 1), padding='same')
             print(self.out.shape)
             
             self.out = tf.layers.conv2d(self.out, 128, (3, 3), (2, 2), padding='valid', activation=tf.nn.relu)
@@ -76,12 +73,16 @@ class Net():
     #         Training loop.                                                                                     #
     # ---------------------------------------------------------------------------------------------------------- #
 
-    def treino(self):
+    def treino(self, input_train, input_val):
+        self.train = input_train
+        self.val = input_val
+
         p = Parameters()
         with tf.Session(graph = self.graph) as session:
             # weight initialization
             session.run(tf.global_variables_initializer())
 
+            contador = 0
             menor_loss = 1e9
             best_acc = 0
             epoca = 0
@@ -95,22 +96,23 @@ class Net():
                 val_acc, val_loss = self.evaluation(session, self.val[0], self.val[1], name='Validation')
                 # Otimizar o early stopping
                 if val_acc > best_acc:
+                    contador = 0
                     menor_loss = val_loss
                     best_acc = val_acc
                     epoca = epoch
                     saver.save(session, os.path.join(p.LOG_DIR, 'model.ckpt'))
                     print ('The model has successful saved')
-                # else:
-                #     contador += 1
-                #     if contador > p.TOLERANCE:
-                #         print('The train has stopped')
-                #         break
-                #         print('O treino deveria ter parado se estivesse usando o early stopping')
-                #     print ('The model hasn\'t saved')
-                # break #TODO
+                else:
+                    contador += 1
+                    if contador > p.TOLERANCE:
+                        print('The train has stopped')
+                        break
+                        print('O treino deveria ter parado se estivesse usando o early stopping')
+                    print ('The model hasn\'t saved')
+
                 print ('\n-********************************************************-')
 
-            print ("Best_acc : " + str(best_acc) + ", loss: " + str(menor_loss) + ", epoca: " + str(epoca)) 
+            print ("Best_acc : " + str(best_acc) + ", loss: " + str(menor_loss) + ", epoca: " + str(epoca + 1)) 
     
     def prediction(self, test, classes_train):
         print ('-********************************************************-')
@@ -129,12 +131,33 @@ class Net():
                     f.write(resp)
                 f.close()
     
-    def prediction2(self, test, classes_train):
+    # def prediction2(self, test, classes_train):
+    #     p = Parameters()
+    #     tf.reset_default_graph()
+    #     saver = tf.train.Saver()
+    #     with tf.Session() as session:
+    #         saver.restore(session, os.path.join(p.LOG_DIR, 'model.ckpt'))
+
+    def prediction2(self, test):
         p = Parameters()
-        tf.reset_default_graph()
-        saver = tf.train.Saver()
-        with tf.Session() as session:
-            saver.restore(session, os.path.join(p.LOG_DIR, 'model.ckpt'))  
+        with tf.Session(graph = self.graph) as session:
+            saver = tf.train.Saver(max_to_keep=0)
+            saver.restore(session, os.path.join(p.LOG_DIR, 'model.ckpt'))
+            time_now = datetime.datetime.now()
+            path_txt = str(time_now.day) + 'd' + str(time_now.hour) + 'h'  + str(time_now.minute) + 'm.txt'
+            predicao = []
+            with open(path_txt, 'w') as f:
+                for j in range(len(test[0])):
+                    feed_dict={self.X: np.reshape(test[0][j], (1, ) + test[0][j].shape), self.is_training: False}
+                    saida = session.run([self.result], feed_dict)
+                    resp = str(test[1][j]) +' ' + str(saida[0][0]) + '\n'
+                    predicao.append(resp)
+                predicao.sort()
+                for j in range(len(predicao)):
+                    print(predicao[j], end='')
+                    f.write(predicao[j])
+                f.close()
+
     # ---------------------------------------------------------------------------------------------------------- #
     # Description:                                                                                               #
     #         Evaluate images in Xv with labels in yv.                                                           #
